@@ -20,13 +20,6 @@
       background-color: #f5f5f5;
 
       text-align: center;
-
-      transition: background-color 0.2s;
-    }
-
-    body.screenshot-mode {
-
-      background-color: white;
     }
 
     h1 {
@@ -35,7 +28,7 @@
 
       margin-top: 18px;
 
-      margin-bottom: 10px;
+      margin-bottom: 18px;
     }
 
     .button-area {
@@ -44,7 +37,7 @@
 
       gap: 6px;
 
-      margin-bottom: 18px;
+      margin-bottom: 14px;
     }
 
     .button-area button {
@@ -66,60 +59,24 @@
       white-space: nowrap;
     }
 
-    #screenshotButton {
-
-      display: none;
-
-      width: 100%;
-
-      margin-top: 18px;
-
-      font-size: 18px;
-
-      padding: 14px 0;
-
-      border: none;
-
-      border-radius: 12px;
-
-      background-color: #222;
-
-      color: white;
-    }
-
-    body.screenshot-mode .button-area,
-    body.screenshot-mode #screenshotButton {
-
-      display: none;
-    }
-
-    #captureArea {
-
-      background-color: white;
-
-      border-radius: 18px;
-
-      padding: 14px 12px;
-
-      box-shadow: 0 2px 10px rgba(0,0,0,0.08);
-    }
-
-    body.screenshot-mode #captureArea {
-
-      box-shadow: none;
-
-      border-radius: 0;
-
-      margin-top: 30px;
-    }
-
     #today {
 
       font-size: 16px;
 
       color: #555;
 
-      margin-bottom: 10px;
+      margin-bottom: 18px;
+    }
+
+    #result {
+
+      background-color: white;
+
+      border-radius: 18px;
+
+      padding: 10px 12px;
+
+      box-shadow: 0 2px 10px rgba(0,0,0,0.08);
     }
 
     .match {
@@ -160,24 +117,6 @@
       word-break: break-word;
     }
 
-    #screenshotGuide {
-
-      display: none;
-
-      margin-top: 20px;
-
-      font-size: 22px;
-
-      line-height: 1.7;
-
-      color: #222;
-    }
-
-    body.screenshot-mode #screenshotGuide {
-
-      display: block;
-    }
-
   </style>
 </head>
 
@@ -201,21 +140,9 @@
 
   </div>
 
-  <div id="captureArea">
+  <div id="today"></div>
 
-    <div id="today"></div>
-
-    <div id="result"></div>
-
-  </div>
-
-  <button id="screenshotButton" onclick="toggleScreenshotMode()">
-    スクショモード
-  </button>
-
-  <div id="screenshotGuide">
-    スクリーンショットを撮ってください<br>
-    解除するには画面をタップ
+  <div id="result">
   </div>
 
   <script>
@@ -240,8 +167,6 @@
       11,12,13,14,15,
       16,17,18,19,20
     ];
-
-    let screenshotMode = false;
 
     function displayToday() {
 
@@ -324,27 +249,7 @@
       }
 
       document.getElementById("result").innerHTML = html;
-
-      document.getElementById("screenshotButton").style.display = "block";
     }
-
-    function toggleScreenshotMode() {
-
-      screenshotMode = true;
-
-      document.body.classList.add("screenshot-mode");
-    }
-
-    document.body.addEventListener("click", function(event) {
-
-      if (!screenshotMode) return;
-
-      if (event.target.id === "screenshotButton") return;
-
-      screenshotMode = false;
-
-      document.body.classList.remove("screenshot-mode");
-    });
 
     displayToday();
 
