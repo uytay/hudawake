@@ -7,6 +7,8 @@
 
   <title>競技かるた札分け</title>
 
+  <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+
   <style>
 
     body {
@@ -68,7 +70,12 @@
       white-space: nowrap;
     }
 
-    #result {
+    #saveButton {
+
+      background-color: #34c759;
+    }
+
+    #captureArea {
 
       background-color: white;
 
@@ -142,8 +149,17 @@
 
   </div>
 
-  <div id="result">
+  <div id="captureArea">
+
+    <div id="result"></div>
+
   </div>
+
+  <br>
+
+  <button id="saveButton" onclick="saveImage()">
+    画像保存
+  </button>
 
   <script>
 
@@ -249,6 +265,87 @@
       }
 
       document.getElementById("result").innerHTML = html;
+    }
+
+    function saveImage() {
+
+      html2canvas(document.getElementById("captureArea"), {
+
+        backgroundColor: "#ffffff",
+
+        scale: 3
+
+      }).then(canvas => {
+
+        const image = canvas.toDataURL("image/png");
+
+        const newWindow = window.open();
+
+        newWindow.document.write(`
+
+          <html>
+
+            <head>
+
+              <title>画像保存</title>
+
+              <style>
+
+                body {
+
+                  margin: 0;
+
+                  background: #222;
+
+                  display: flex;
+
+                  justify-content: center;
+
+                  align-items: center;
+
+                  flex-direction: column;
+
+                  min-height: 100vh;
+                }
+
+                p {
+
+                  color: white;
+
+                  font-size: 18px;
+
+                  margin-bottom: 20px;
+
+                  font-family: sans-serif;
+                }
+
+                img {
+
+                  width: 95%;
+
+                  max-width: 700px;
+
+                  border-radius: 12px;
+                }
+
+              </style>
+
+            </head>
+
+            <body>
+
+              <p>
+                画像を長押し → 「写真に保存」
+              </p>
+
+              <img src="${image}">
+
+            </body>
+
+          </html>
+
+        `);
+      });
     }
 
     displayToday();
