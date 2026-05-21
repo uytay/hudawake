@@ -37,7 +37,7 @@
 
       gap: 6px;
 
-      margin-bottom: 14px;
+      margin-bottom: 22px;
     }
 
     .button-area button {
@@ -200,36 +200,50 @@
       return array;
     }
 
+    function generateNumberSelection() {
+
+      while (true) {
+
+        const selected =
+          shuffle([...numbers]).slice(0, 10);
+
+        const twoDigitCount =
+          selected.filter(n => n >= 10).length;
+
+        if (twoDigitCount <= 7) {
+
+          return selected.sort((a, b) => a - b);
+        }
+      }
+    }
+
     function generate(type) {
-
-      let source = [];
-
-      if (type === "number") {
-        source = [...numbers];
-      }
-
-      if (type === "alphabet") {
-        source = [...alphabet];
-      }
-
-      if (type === "hiragana") {
-        source = [...hiragana];
-      }
 
       let html = "";
 
       for (let match = 1; match <= 4; match++) {
 
-        const selected = shuffle([...source]).slice(0, 10);
+        let selected = [];
 
-        selected.sort((a, b) => {
+        if (type === "number") {
 
-          if (typeof a === "number") {
-            return a - b;
-          }
+          selected = generateNumberSelection();
+        }
 
-          return String(a).localeCompare(String(b));
-        });
+        if (type === "alphabet") {
+
+          selected =
+            shuffle([...alphabet])
+            .slice(0, 10)
+            .sort();
+        }
+
+        if (type === "hiragana") {
+
+          selected =
+            shuffle([...hiragana])
+            .slice(0, 10);
+        }
 
         html += `
 
