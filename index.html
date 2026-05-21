@@ -7,8 +7,6 @@
 
   <title>競技かるた札分け</title>
 
-  <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
-
   <style>
 
     body {
@@ -22,6 +20,13 @@
       background-color: #f5f5f5;
 
       text-align: center;
+
+      transition: background-color 0.2s;
+    }
+
+    body.screenshot-mode {
+
+      background-color: white;
     }
 
     h1 {
@@ -61,7 +66,7 @@
       white-space: nowrap;
     }
 
-    #saveButton {
+    #screenshotButton {
 
       display: none;
 
@@ -82,6 +87,12 @@
       color: white;
     }
 
+    body.screenshot-mode .button-area,
+    body.screenshot-mode #screenshotButton {
+
+      display: none;
+    }
+
     #captureArea {
 
       background-color: white;
@@ -91,6 +102,15 @@
       padding: 14px 12px;
 
       box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+    }
+
+    body.screenshot-mode #captureArea {
+
+      box-shadow: none;
+
+      border-radius: 0;
+
+      margin-top: 30px;
     }
 
     #today {
@@ -140,29 +160,22 @@
       word-break: break-word;
     }
 
-    #imageArea {
+    #screenshotGuide {
 
       display: none;
 
-      margin-top: 24px;
-    }
-
-    #imageMessage {
+      margin-top: 20px;
 
       font-size: 22px;
 
-      margin-bottom: 16px;
+      line-height: 1.7;
 
-      line-height: 1.6;
+      color: #222;
     }
 
-    #generatedImage {
+    body.screenshot-mode #screenshotGuide {
 
-      width: 100%;
-
-      border-radius: 16px;
-
-      box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+      display: block;
     }
 
   </style>
@@ -196,19 +209,13 @@
 
   </div>
 
-  <button id="saveButton" onclick="saveImage()">
-    画像保存
+  <button id="screenshotButton" onclick="toggleScreenshotMode()">
+    スクショモード
   </button>
 
-  <div id="imageArea">
-
-    <div id="imageMessage">
-      画像を長押しして<br>
-      「写真に保存」
-    </div>
-
-    <img id="generatedImage">
-
+  <div id="screenshotGuide">
+    スクリーンショットを撮ってください<br>
+    解除するには画面をタップ
   </div>
 
   <script>
@@ -233,6 +240,8 @@
       11,12,13,14,15,
       16,17,18,19,20
     ];
+
+    let screenshotMode = false;
 
     function displayToday() {
 
@@ -316,33 +325,26 @@
 
       document.getElementById("result").innerHTML = html;
 
-      document.getElementById("saveButton").style.display = "block";
-
-      document.getElementById("imageArea").style.display = "none";
+      document.getElementById("screenshotButton").style.display = "block";
     }
 
-    function saveImage() {
+    function toggleScreenshotMode() {
 
-      html2canvas(document.getElementById("captureArea"), {
+      screenshotMode = true;
 
-        backgroundColor: "#ffffff",
-
-        scale: 3
-
-      }).then(canvas => {
-
-        const image = canvas.toDataURL("image/png");
-
-        document.getElementById("generatedImage").src = image;
-
-        document.getElementById("imageArea").style.display = "block";
-
-        document.getElementById("imageArea")
-          .scrollIntoView({
-            behavior: "smooth"
-          });
-      });
+      document.body.classList.add("screenshot-mode");
     }
+
+    document.body.addEventListener("click", function(event) {
+
+      if (!screenshotMode) return;
+
+      if (event.target.id === "screenshotButton") return;
+
+      screenshotMode = false;
+
+      document.body.classList.remove("screenshot-mode");
+    });
 
     displayToday();
 
