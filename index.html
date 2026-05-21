@@ -242,7 +242,11 @@
 
           selected =
             shuffle([...hiragana])
-            .slice(0, 10);
+            .slice(0, 10)
+            .sort(
+              (a, b) =>
+              hiragana.indexOf(a) - hiragana.indexOf(b)
+            );
         }
 
         html += `
