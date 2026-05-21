@@ -72,7 +72,23 @@
 
     #saveButton {
 
-      background-color: #34c759;
+      display: none;
+
+      width: 100%;
+
+      margin-top: 18px;
+
+      font-size: 18px;
+
+      padding: 14px 0;
+
+      border: none;
+
+      border-radius: 12px;
+
+      background-color: #222;
+
+      color: white;
     }
 
     #captureArea {
@@ -154,8 +170,6 @@
     <div id="result"></div>
 
   </div>
-
-  <br>
 
   <button id="saveButton" onclick="saveImage()">
     画像保存
@@ -265,6 +279,8 @@
       }
 
       document.getElementById("result").innerHTML = html;
+
+      document.getElementById("saveButton").style.display = "block";
     }
 
     function saveImage() {
@@ -289,13 +305,17 @@
 
               <title>画像保存</title>
 
+              <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
               <style>
 
                 body {
 
                   margin: 0;
 
-                  background: #222;
+                  padding: 20px;
+
+                  background: #111;
 
                   display: flex;
 
@@ -306,26 +326,32 @@
                   flex-direction: column;
 
                   min-height: 100vh;
+
+                  box-sizing: border-box;
                 }
 
                 p {
 
                   color: white;
 
-                  font-size: 18px;
+                  font-size: 28px;
 
-                  margin-bottom: 20px;
+                  text-align: center;
+
+                  margin-bottom: 24px;
+
+                  line-height: 1.6;
 
                   font-family: sans-serif;
                 }
 
                 img {
 
-                  width: 95%;
+                  width: 100%;
 
-                  max-width: 700px;
+                  max-width: 900px;
 
-                  border-radius: 12px;
+                  border-radius: 14px;
                 }
 
               </style>
@@ -335,7 +361,8 @@
             <body>
 
               <p>
-                画像を長押し → 「写真に保存」
+                画像を長押しして<br>
+                「写真に保存」
               </p>
 
               <img src="${image}">
