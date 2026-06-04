@@ -8,11 +8,8 @@
   <title>競技かるた札分け</title>
 
   <!-- Google Analytics -->
-
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-G8S3X9K2LC"></script>
-
   <script>
-
     window.dataLayer = window.dataLayer || [];
 
     function gtag() {
@@ -20,9 +17,7 @@
     }
 
     gtag('js', new Date());
-
     gtag('config', 'G-G8S3X9K2LC');
-
   </script>
 
   <style>
@@ -160,8 +155,7 @@
 
   <div id="today"></div>
 
-  <div id="result">
-  </div>
+  <div id="result"></div>
 
   <script>
 
@@ -208,14 +202,16 @@
 
     function shuffle(array) {
 
-      for (let i = array.length - 1; i > 0; i--) {
+      const copy = [...array];
+
+      for (let i = copy.length - 1; i > 0; i--) {
 
         const j = Math.floor(Math.random() * (i + 1));
 
-        [array[i], array[j]] = [array[j], array[i]];
+        [copy[i], copy[j]] = [copy[j], copy[i]];
       }
 
-      return array;
+      return copy;
     }
 
     function generateNumberSelection() {
@@ -223,7 +219,7 @@
       while (true) {
 
         const selected =
-          shuffle([...numbers]).slice(0, 10);
+          shuffle(numbers).slice(0, 10);
 
         const twoDigitCount =
           selected.filter(n => n >= 10).length;
@@ -235,9 +231,39 @@
       }
     }
 
+    function generateSelectionWithOverlap(source, previousSelection) {
+
+      const unused =
+        source.filter(
+          x => !previousSelection.includes(x)
+        );
+
+      const used =
+        source.filter(
+          x => previousSelection.includes(x)
+        );
+
+      const unusedCount =
+        Math.floor(Math.random() * 6) + 5;
+        // 5～10
+
+      const usedCount =
+        10 - unusedCount;
+
+      return [
+
+        ...shuffle(unused).slice(0, unusedCount),
+
+        ...shuffle(used).slice(0, usedCount)
+
+      ];
+    }
+
     function generate(type) {
 
       let html = "";
+
+      let previousSelection = null;
 
       for (let match = 1; match <= 4; match++) {
 
@@ -245,27 +271,82 @@
 
         if (type === "number") {
 
-          selected = generateNumberSelection();
+          if (match === 1) {
+
+            selected = generateNumberSelection();
+
+          } else {
+
+            while (true) {
+
+              selected =
+                generateSelectionWithOverlap(
+                  numbers,
+                  previousSelection
+                );
+
+              const twoDigitCount =
+                selected.filter(
+                  n => n >= 10
+                ).length;
+
+              if (twoDigitCount <= 7) {
+
+                selected.sort(
+                  (a, b) => a - b
+                );
+
+                break;
+              }
+            }
+          }
         }
 
         if (type === "alphabet") {
 
-          selected =
-            shuffle([...alphabet])
-            .slice(0, 10)
-            .sort();
+          if (match === 1) {
+
+            selected =
+              shuffle(alphabet)
+              .slice(0, 10);
+
+          } else {
+
+            selected =
+              generateSelectionWithOverlap(
+                alphabet,
+                previousSelection
+              );
+          }
+
+          selected.sort();
         }
 
         if (type === "hiragana") {
 
-          selected =
-            shuffle([...hiragana])
-            .slice(0, 10)
-            .sort(
-              (a, b) =>
-              hiragana.indexOf(a) - hiragana.indexOf(b)
-            );
+          if (match === 1) {
+
+            selected =
+              shuffle(hiragana)
+              .slice(0, 10);
+
+          } else {
+
+            selected =
+              generateSelectionWithOverlap(
+                hiragana,
+                previousSelection
+              );
+          }
+
+          selected.sort(
+            (a, b) =>
+            hiragana.indexOf(a) -
+            hiragana.indexOf(b)
+          );
         }
+
+        previousSelection = [...selected];
 
         html += `
 
