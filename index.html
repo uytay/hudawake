@@ -81,6 +81,24 @@
       margin-bottom: 18px;
     }
 
+    #matchCountArea {
+
+      margin-bottom: 18px;
+    }
+    
+    #matchCount {
+    
+      font-size: 15px;
+    
+      padding: 6px 12px;
+    
+      border: 1px solid #ccc;
+    
+      border-radius: 8px;
+    
+      background-color: white;
+    }
+
     #result {
 
       background-color: white;
@@ -153,7 +171,23 @@
 
   </div>
 
-  <div id="today"></div>
+  <div id="matchCountArea">
+
+  <select id="matchCount">
+
+    <option value="1">1試合</option>
+
+    <option value="2">2試合</option>
+
+    <option value="3">3試合</option>
+
+    <option value="4" selected>4試合</option>
+
+  </select>
+
+</div>
+
+<div id="today"></div>
 
   <div id="result"></div>
 
@@ -261,11 +295,20 @@
 
     function generate(type) {
 
-      let html = "";
-
-      let previousSelection = null;
-
-      for (let match = 1; match <= 4; match++) {
+        const matchCount =
+          parseInt(
+            document.getElementById("matchCount").value
+          );
+      
+        let html = "";
+      
+        let previousSelection = null;
+      
+        for (
+          let match = 1;
+          match <= matchCount;
+          match++
+        ) {
 
         let selected = [];
 
