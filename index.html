@@ -85,17 +85,17 @@
 
       margin-bottom: 18px;
     }
-    
+
     #matchCount {
-    
+
       font-size: 15px;
-    
+
       padding: 6px 12px;
-    
+
       border: 1px solid #ccc;
-    
+
       border-radius: 8px;
-    
+
       background-color: white;
     }
 
@@ -173,21 +173,21 @@
 
   <div id="matchCountArea">
 
-  <select id="matchCount">
+    <select id="matchCount">
 
-    <option value="1">1試合</option>
+      <option value="1">1試合</option>
 
-    <option value="2">2試合</option>
+      <option value="2">2試合</option>
 
-    <option value="3">3試合</option>
+      <option value="3">3試合</option>
 
-    <option value="4" selected>4試合</option>
+      <option value="4" selected>4試合</option>
 
-  </select>
+    </select>
 
-</div>
+  </div>
 
-<div id="today"></div>
+  <div id="today"></div>
 
   <div id="result"></div>
 
@@ -260,67 +260,153 @@
 
         if (twoDigitCount <= 7) {
 
-          return selected.sort((a, b) => a - b);
+          return selected.sort(
+            (a, b) => a - b
+          );
         }
       }
     }
 
-    function generateSelectionWithOverlap(source, previousSelection) {
-
-      const unused =
-        source.filter(
-          x => !previousSelection.includes(x)
-        );
+    /*
+     * 前の試合で使った記号から3個、
+     * 前の試合で使っていない記号から7個を選択する
+     */
+    function generateSelectionWithOverlap(
+      source,
+      previousSelection
+    ) {
 
       const used =
         source.filter(
           x => previousSelection.includes(x)
         );
 
-      const unusedCount =
-        Math.floor(Math.random() * 6) + 5;
-        // 5～10
+      const unused =
+        source.filter(
+          x => !previousSelection.includes(x)
+        );
 
-      const usedCount =
-        10 - unusedCount;
+      const selectedUsed =
+        shuffle(used).slice(0, 3);
+
+      const selectedUnused =
+        shuffle(unused).slice(0, 7);
 
       return [
-
-        ...shuffle(unused).slice(0, unusedCount),
-
-        ...shuffle(used).slice(0, usedCount)
-
+        ...selectedUsed,
+        ...selectedUnused
       ];
+    }
+
+    /*
+     * 2つの札分けで共通している記号の数を数える
+     */
+    function countOverlap(
+      selectionA,
+      selectionB
+    ) {
+
+      return selectionA.filter(
+        x => selectionB.includes(x)
+      ).length;
+    }
+
+    /*
+     * 前試合との一致数が
+     *
+     * 0、8、9、10
+     *
+     * の場合は不採用とする
+     */
+    function isValidSelection(
+      selected,
+      previousSelection
+    ) {
+
+      if (previousSelection === null) {
+
+        return true;
+      }
+
+      const overlap =
+        countOverlap(
+          selected,
+          previousSelection
+        );
+
+      return ![
+        0,
+        8,
+        9,
+        10
+      ].includes(overlap);
     }
 
     function generate(type) {
 
-        const matchCount =
-          parseInt(
-            document.getElementById("matchCount").value
-          );
-      
-        let html = "";
-      
-        let previousSelection = null;
-      
-        for (
-          let match = 1;
-          match <= matchCount;
-          match++
-        ) {
+      const matchCount =
+        parseInt(
+          document.getElementById("matchCount").value
+        );
+
+      let html = "";
+
+      let previousSelection = null;
+
+      for (
+        let match = 1;
+        match <= matchCount;
+        match++
+      ) {
 
         let selected = [];
 
-        if (type === "number") {
+        /*
+         * 1試合目は通常のランダム生成
+         */
+        if (match === 1) {
 
-          if (match === 1) {
+          if (type === "number") {
 
-            selected = generateNumberSelection();
+            selected =
+              generateNumberSelection();
 
-          } else {
+          }
 
-            while (true) {
+          if (type === "alphabet") {
+
+            selected =
+              shuffle(alphabet)
+              .slice(0, 10)
+              .sort();
+
+          }
+
+          if (type === "hiragana") {
+
+            selected =
+              shuffle(hiragana)
+              .slice(0, 10)
+              .sort(
+                (a, b) =>
+                hiragana.indexOf(a) -
+                hiragana.indexOf(b)
+              );
+          }
+
+        }
+
+        /*
+         * 2試合目以降
+         */
+        else {
+
+          while (true) {
+
+            /*
+             * 数字
+             */
+            if (type === "number") {
 
               selected =
                 generateSelectionWithOverlap(
@@ -328,68 +414,90 @@
                   previousSelection
                 );
 
+              /*
+               * 2桁の数字は7個以下
+               */
               const twoDigitCount =
                 selected.filter(
                   n => n >= 10
                 ).length;
 
-              if (twoDigitCount <= 7) {
+              if (
+                twoDigitCount > 7
+              ) {
 
-                selected.sort(
-                  (a, b) => a - b
-                );
-
-                break;
+                continue;
               }
             }
-          }
-        }
 
-        if (type === "alphabet") {
+            /*
+             * アルファベット
+             */
+            if (type === "alphabet") {
 
-          if (match === 1) {
+              selected =
+                generateSelectionWithOverlap(
+                  alphabet,
+                  previousSelection
+                );
+            }
 
-            selected =
-              shuffle(alphabet)
-              .slice(0, 10);
+            /*
+             * ひらがな
+             */
+            if (type === "hiragana") {
 
-          } else {
+              selected =
+                generateSelectionWithOverlap(
+                  hiragana,
+                  previousSelection
+                );
+            }
 
-            selected =
-              generateSelectionWithOverlap(
-                alphabet,
+            /*
+             * 前試合との一致数を確認
+             */
+            if (
+              isValidSelection(
+                selected,
                 previousSelection
-              );
+              )
+            ) {
+
+              break;
+            }
           }
 
-          selected.sort();
-        }
+          /*
+           * 並び順を整える
+           */
+          if (type === "number") {
 
-        if (type === "hiragana") {
-
-          if (match === 1) {
-
-            selected =
-              shuffle(hiragana)
-              .slice(0, 10);
-
-          } else {
-
-            selected =
-              generateSelectionWithOverlap(
-                hiragana,
-                previousSelection
-              );
+            selected.sort(
+              (a, b) => a - b
+            );
           }
 
-          selected.sort(
-            (a, b) =>
-            hiragana.indexOf(a) -
-            hiragana.indexOf(b)
-          );
+          if (type === "alphabet") {
+
+            selected.sort();
+          }
+
+          if (type === "hiragana") {
+
+            selected.sort(
+              (a, b) =>
+              hiragana.indexOf(a) -
+              hiragana.indexOf(b)
+            );
+          }
         }
 
-        previousSelection = [...selected];
+        /*
+         * 今回の札分けを次の試合の比較対象にする
+         */
+        previousSelection =
+          [...selected];
 
         html += `
 
@@ -408,7 +516,8 @@
         `;
       }
 
-      document.getElementById("result").innerHTML = html;
+      document.getElementById("result").innerHTML =
+        html;
     }
 
     displayToday();
