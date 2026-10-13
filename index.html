@@ -102,12 +102,6 @@
       word-break: break-word;
     }
 
-    .number-group-label {
-      font-size: 15px;
-      color: #555;
-      margin-bottom: 2px;
-    }
-
     #version {
       position: fixed;
       right: 8px;
@@ -153,7 +147,7 @@
 
   <div id="result"></div>
 
-  <div id="version">Ver. 1.1.0</div>
+  <div id="version">Ver. 1.1.1</div>
 
   <script>
     const hiragana = [
@@ -276,9 +270,9 @@
     }
 
     /*
-     * 札番号の位を4試合分決める
-     * 1の位と10の位を2試合ずつにし、
-     * 試合順はランダムにする
+     * 札番号の位を決める
+     * 4試合の場合、1の位と10の位を2試合ずつにする
+     * 試合順はランダム
      */
     function generateGroupTypes(matchCount) {
       const groupTypes = shuffle([
@@ -294,35 +288,41 @@
     /*
      * 札番号の選出
      *
-     * 同じ位が連続する場合：
-     * 前の試合で使った組から1組、
-     * 使っていない組から4組選ぶ。
+     * 同じ位を過去に選出している場合：
+     * その位の前回の組から1組、
+     * その位の前回に使っていない組から4組選ぶ。
      *
-     * 位が変わる場合：
-     * 切り替え先の10組から5組を新たに選ぶ。
+     * まだその位を選出していない場合：
+     * 10組から5組をランダムに選ぶ。
+     *
+     * もう一方の位の選出結果は参照しない。
      */
     function generateCardNumberSelection(
-      groupType,
-      previousGroupType,
-      previousSelection
+      previousSelectionForThisGroup
     ) {
-      if (
-        previousSelection === null ||
-        groupType !== previousGroupType
-      ) {
+      /*
+       * この位を初めて使う場合
+       */
+      if (previousSelectionForThisGroup === null) {
         return shuffle(digits)
           .slice(0, 5)
           .sort((a, b) => a - b);
       }
 
+      /*
+       * この位の前回の選出結果を使う
+       */
       const used = digits.filter(
-        d => previousSelection.includes(d)
+        d => previousSelectionForThisGroup.includes(d)
       );
 
       const unused = digits.filter(
-        d => !previousSelection.includes(d)
+        d => !previousSelectionForThisGroup.includes(d)
       );
 
+      /*
+       * 前回の組から1組、未使用の組から4組
+       */
       const selectedUsed = shuffle(used).slice(0, 1);
       const selectedUnused = shuffle(unused).slice(0, 4);
 
@@ -356,7 +356,15 @@
 
       let html = "";
       let previousSelection = null;
-      let previousGroupType = null;
+
+      /*
+       * 札番号専用：
+       * 1の位と10の位の前回結果を別々に保存する
+       */
+      const previousCardSelections = {
+        ones: null,
+        tens: null
+      };
 
       /*
        * 札番号の場合、各試合の位を先に決める
@@ -469,10 +477,17 @@
         else {
           groupType = groupTypes[match - 1];
 
+          /*
+           * 今回の位に対応する前回結果だけを取得
+           */
+          const previousSelectionForThisGroup =
+            previousCardSelections[groupType];
+
+          /*
+           * 同じ位の前回結果に基づいて選出
+           */
           selected = generateCardNumberSelection(
-            groupType,
-            previousGroupType,
-            previousSelection
+            previousSelectionForThisGroup
           );
 
           html += `
@@ -486,16 +501,21 @@
               )}
             </div>
           `;
+
+          /*
+           * 今回の結果を、その位の記憶として更新
+           * もう一方の位の記憶は変更しない
+           */
+          previousCardSelections[groupType] = [
+            ...selected
+          ];
         }
 
         /*
-         * 次の試合との比較用に保存
+         * 数字・アルファベット・ひらがな用の
+         * 前回結果を保存
          */
         previousSelection = [...selected];
-
-        if (type === "cardNumber") {
-          previousGroupType = groupType;
-        }
       }
 
       document.getElementById("result").innerHTML = html;
