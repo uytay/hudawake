@@ -103,14 +103,12 @@
       word-break: break-word;
     }
 
-    /* 札番号の位の表示 */
     .number-group-label {
       font-size: 15px;
       color: #555;
       margin-bottom: 2px;
     }
 
-    /* バージョン表示 */
     #version {
       position: fixed;
       right: 8px;
@@ -212,8 +210,8 @@
     }
 
     /*
-     * 数字の札分け：1～20から10組を選ぶ
-     * 2桁の数字は7組以下とする
+     * 数字：1～20から10組を選ぶ
+     * 2桁の数字は7組以下
      */
     function generateNumberSelection() {
       while (true) {
@@ -279,42 +277,6 @@
     }
 
     /*
-     * 札番号のグループから実際の札番号を取得する
-     *
-     * 1の位：
-     * 0 → 10, 20, ..., 100
-     * 1 → 1, 11, ..., 91
-     * ...
-     * 9 → 9, 19, ..., 99
-     *
-     * 10の位：
-     * 0 → 1～9, 100
-     * 1 → 10～19
-     * ...
-     * 9 → 90～99
-     */
-    function getCardNumbers(groupType, digit) {
-      const result = [];
-
-      for (let n = 1; n <= 100; n++) {
-        if (groupType === "ones") {
-          if (n % 10 === digit) {
-            result.push(n);
-          }
-        } else {
-          const tensDigit =
-            n === 100 ? 0 : Math.floor(n / 10);
-
-          if (tensDigit === digit) {
-            result.push(n);
-          }
-        }
-      }
-
-      return result;
-    }
-
-    /*
      * 札番号の位を4試合分決める
      * 1の位と10の位を2試合ずつにし、
      * 試合順はランダムにする
@@ -349,9 +311,9 @@
         previousSelection === null ||
         groupType !== previousGroupType
       ) {
-        return shuffle(digits).slice(0, 5).sort(
-          (a, b) => a - b
-        );
+        return shuffle(digits)
+          .slice(0, 5)
+          .sort((a, b) => a - b);
       }
 
       const used = digits.filter(
@@ -372,23 +334,16 @@
     }
 
     /*
-     * 札番号の結果表示用HTMLを作る
+     * 札番号は位と選出された5組だけを表示する
      */
     function createCardNumberContent(groupType, selected) {
       const groupLabel =
         groupType === "ones" ? "1の位" : "10の位";
 
-      const cardNumbers = selected
-        .flatMap(digit => getCardNumbers(groupType, digit))
-        .sort((a, b) => a - b);
-
       return `
         <div class="match-content">
-          <div class="number-group-label">
-            ${groupLabel}：${selected.join("・")}
-          </div>
           <div>
-            ${cardNumbers.join(" ")}
+            ${groupLabel}：${selected.join("・")}
           </div>
         </div>
       `;
@@ -405,7 +360,7 @@
       let previousGroupType = null;
 
       /*
-       * 札番号の場合、先に各試合の位を決める
+       * 札番号の場合、各試合の位を先に決める
        */
       const groupTypes =
         type === "cardNumber"
