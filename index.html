@@ -29,7 +29,8 @@
     .match-title { width:58px; font-size:14px; font-weight:bold; flex-shrink:0; text-align:center; white-space:nowrap; }
     .match-content { font-size:15px; text-align:left; line-height:1.5; white-space:nowrap; flex:1; min-width:0; }
     .match-actions { flex-shrink:0; width:27px; }
-    .cards-button { width:27px; height:27px; display:flex; align-items:center; justify-content:center; border:1px solid #007aff; color:#007aff; background:#fff; border-radius:50%; padding:0; font-size:17px; line-height:1; white-space:nowrap; cursor:pointer; flex-shrink:0; }
+    .cards-button { width:27px; height:27px; display:flex; align-items:center; justify-content:center; border:0; color:#007aff; background:transparent; border-radius:0; padding:0; line-height:1; cursor:pointer; flex-shrink:0; }
+    .cards-button svg { display:block; width:21px; height:21px; }
     #version { position:fixed; right:8px; bottom:6px; font-size:11px; color:#aaa; pointer-events:none; }
     .overlay { position:fixed; inset:0; background:rgba(0,0,0,.42); display:none; z-index:10; }
     .overlay.open { display:block; }
@@ -46,7 +47,6 @@
       .match { gap:4px; }
       .match-title { width:58px; font-size:14px; }
       .match-content { font-size:15px; }
-      .cards-button { padding:7px 6px; font-size:11px; }
     }
   </style>
 </head>
@@ -236,7 +236,7 @@
         <div class="match">
           <div class="match-title">${m.match}試合目</div>
           <div class="match-content">${escapeHtml(matchSummary(m,result))}</div>
-          <div class="match-actions"><button class="cards-button" aria-label="${m.match}試合目の札一覧" title="札一覧" onclick="openCards(${m.match})">ℹ️</button></div>
+          <div class="match-actions"><button class="cards-button" aria-label="${m.match}試合目の札一覧" title="札一覧" onclick="openCards(${m.match})"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><circle cx="3" cy="6" r="1"/><circle cx="3" cy="12" r="1"/><circle cx="3" cy="18" r="1"/></svg></button></div>
         </div>`).join("");
     }
 
