@@ -27,7 +27,7 @@
     .match { display:flex; align-items:center; gap:6px; border-bottom:1px solid #ddd; padding:12px 0; }
     .match:last-child { border-bottom:none; }
     .match-title { width:58px; font-size:14px; font-weight:bold; flex-shrink:0; text-align:center; white-space:nowrap; }
-    .match-content { font-size:15px; text-align:left; line-height:1.5; white-space:nowrap; flex:1; min-width:0; }
+    .match-content { font-size:15px; text-align:left; line-height:1.5; white-space:normal; overflow-wrap:anywhere; flex:1 1 0; min-width:0; }
     .match-actions { flex-shrink:0; width:27px; }
     .cards-button { width:27px; height:27px; display:flex; align-items:center; justify-content:center; border:0; color:#007aff; background:transparent; border-radius:0; padding:0; line-height:1; cursor:pointer; flex-shrink:0; }
     .cards-button svg { display:block; width:21px; height:21px; }
@@ -46,7 +46,7 @@
       .button-area button { font-size:13px; padding:10px 1px; }
       .match { gap:4px; }
       .match-title { width:58px; font-size:14px; }
-      .match-content { font-size:15px; }
+      .match-content { font-size:14px; }
     }
   </style>
 </head>
@@ -69,7 +69,7 @@
   <div id="today"></div>
   <div id="status" role="status"></div>
   <div id="result"><div class="empty-state">札分けの種類を選んでください。</div></div>
-  <div id="version">Ver. 2.0.2</div>
+  <div id="version">Ver. 2.0.3</div>
 
   <div id="cardsOverlay" class="overlay" onclick="closeCardsIfBackdrop(event)">
     <section class="side-panel" role="dialog" aria-modal="true" aria-labelledby="panelTitle">
