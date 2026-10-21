@@ -1,529 +1,356 @@
 <!DOCTYPE html>
 <html lang="ja">
-
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
   <title>競技かるた札分け</title>
-
-  <!-- Google Analytics -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-G8S3X9K2LC"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
-
-    function gtag() {
-      dataLayer.push(arguments);
-    }
-
+    function gtag(){dataLayer.push(arguments);}
     gtag('js', new Date());
     gtag('config', 'G-G8S3X9K2LC');
   </script>
-
   <style>
-    body {
-      margin: 0;
-      padding: 10px;
-      font-family: sans-serif;
-      background-color: #f5f5f5;
-      text-align: center;
-    }
-
-    h1 {
-      font-size: 24px;
-      margin-top: 12px;
-      margin-bottom: 12px;
-    }
-
-    .button-area {
-      display: flex;
-      gap: 6px;
-      margin-bottom: 12px;
-    }
-
-    .button-area button {
-      flex: 1;
-      font-size: 15px;
-      padding: 10px 0;
-      border: none;
-      border-radius: 10px;
-      background-color: #007aff;
-      color: white;
-      white-space: nowrap;
-    }
-
-    #today {
-      font-size: 16px;
-      color: #555;
-      margin-bottom: 18px;
-    }
-
-    #matchCountArea {
-      margin-bottom: 18px;
-    }
-
-    #matchCount {
-      font-size: 15px;
-      padding: 6px 12px;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-      background-color: white;
-    }
-
-    #result {
-      background-color: white;
-      border-radius: 18px;
-      padding: 10px 12px;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
-    }
-
-    .match {
-      display: flex;
-      align-items: center;
-      border-bottom: 1px solid #ddd;
-      padding: 12px 0;
-    }
-
-    .match:last-child {
-      border-bottom: none;
-    }
-
-    .match-title {
-      width: 72px;
-      font-size: 16px;
-      font-weight: bold;
-      flex-shrink: 0;
-    }
-
-    .match-content {
-      font-size: 18px;
-      text-align: left;
-      line-height: 1.5;
-      word-break: break-word;
-    }
-
-    #version {
-      position: fixed;
-      right: 8px;
-      bottom: 6px;
-      font-size: 11px;
-      color: #aaa;
+    * { box-sizing: border-box; }
+    body { margin:0; padding:10px; font-family:sans-serif; background:#f5f5f5; text-align:center; color:#222; }
+    h1 { font-size:24px; margin:12px 0; }
+    .button-area { display:flex; gap:6px; margin-bottom:12px; }
+    .button-area button { flex:1; font-size:15px; padding:10px 2px; border:0; border-radius:10px; background:#007aff; color:#fff; white-space:nowrap; cursor:pointer; }
+    button:disabled { opacity:.6; cursor:wait; }
+    #today { font-size:16px; color:#555; margin-bottom:14px; }
+    #matchCountArea { margin-bottom:14px; }
+    #matchCount { font-size:15px; padding:6px 12px; border:1px solid #ccc; border-radius:8px; background:#fff; }
+    #status { font-size:13px; color:#666; margin:0 auto 10px; min-height:1em; }
+    #result { background:#fff; border-radius:18px; padding:10px 12px; box-shadow:0 2px 10px rgba(0,0,0,.08); text-align:left; }
+    .empty-state { text-align:center; padding:28px 8px; color:#777; font-size:15px; }
+    .match { display:flex; align-items:center; gap:8px; border-bottom:1px solid #ddd; padding:12px 0; }
+    .match:last-child { border-bottom:none; }
+    .match-title { width:66px; font-size:15px; font-weight:bold; flex-shrink:0; text-align:center; }
+    .match-content { font-size:17px; text-align:left; line-height:1.5; word-break:break-word; flex:1; }
+    .match-actions { flex-shrink:0; }
+    .cards-button { border:1px solid #007aff; color:#007aff; background:#fff; border-radius:8px; padding:7px 8px; font-size:12px; white-space:nowrap; cursor:pointer; }
+    #version { position:fixed; right:8px; bottom:6px; font-size:11px; color:#aaa; pointer-events:none; }
+    .overlay { position:fixed; inset:0; background:rgba(0,0,0,.42); display:none; z-index:10; }
+    .overlay.open { display:block; }
+    .side-panel { position:absolute; top:0; right:0; height:100%; width:min(520px,94vw); background:#fff; overflow-y:auto; text-align:left; padding:16px; box-shadow:-4px 0 18px rgba(0,0,0,.18); }
+    .panel-header { display:flex; align-items:center; justify-content:space-between; gap:12px; position:sticky; top:-16px; background:#fff; padding:8px 0 12px; border-bottom:1px solid #ddd; z-index:1; }
+    .panel-header h2 { margin:0; font-size:18px; }
+    .close-button { border:0; background:#eee; border-radius:8px; padding:8px 12px; font-size:14px; }
+    .card-name-list { display:flex; flex-direction:column; gap:4px; margin-top:14px; }
+    .card-name { display:block; padding:2px 0; font-size:17px; font-weight:600; line-height:1.5; }
+    .notice { font-size:12px; color:#777; margin-top:12px; line-height:1.5; }
+    @media (max-width:390px) {
+      .button-area { gap:4px; }
+      .button-area button { font-size:13px; padding:10px 1px; }
+      .match { gap:4px; }
+      .match-title { width:58px; font-size:14px; }
+      .match-content { font-size:15px; }
+      .cards-button { padding:7px 6px; font-size:11px; }
     }
   </style>
 </head>
-
 <body>
-
   <h1>競技かるた札分け</h1>
-
   <div class="button-area">
-    <button onclick="generate('number')">
-      数字
-    </button>
-
-    <button onclick="generate('alphabet')">
-      アルファベット
-    </button>
-
-    <button onclick="generate('hiragana')">
-      ひらがな
-    </button>
-
-    <button onclick="generate('cardNumber')">
-      札番号
-    </button>
+    <button data-mode="number" onclick="generate('number')">数字</button>
+    <button data-mode="alphabet" onclick="generate('alphabet')">アルファベット</button>
+    <button data-mode="hiragana" onclick="generate('hiragana')">ひらがな</button>
+    <button data-mode="cardNumber" onclick="generate('cardNumber')">札番号</button>
   </div>
-
   <div id="matchCountArea">
-    <select id="matchCount">
+    <select id="matchCount" aria-label="試合数">
       <option value="1">1試合</option>
       <option value="2">2試合</option>
       <option value="3">3試合</option>
       <option value="4" selected>4試合</option>
     </select>
   </div>
-
   <div id="today"></div>
+  <div id="status" role="status"></div>
+  <div id="result"><div class="empty-state">札分けの種類を選んでください。</div></div>
+  <div id="version">Ver. 2.0.1</div>
 
-  <div id="result"></div>
+  <div id="cardsOverlay" class="overlay" onclick="closeCardsIfBackdrop(event)">
+    <section class="side-panel" role="dialog" aria-modal="true" aria-labelledby="panelTitle">
+      <div class="panel-header">
+        <h2 id="panelTitle">札一覧</h2>
+        <button class="close-button" onclick="closeCards()">閉じる</button>
+      </div>
+      <div id="cardsPanelContent"></div>
+    </section>
+  </div>
 
-  <div id="version">Ver. 1.1.1</div>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import {
+      getFirestore, doc, getDoc, runTransaction, serverTimestamp
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-  <script>
-    const hiragana = [
-      "あ", "い", "う", "え", "お",
-      "か", "き", "く", "け", "こ",
-      "さ", "し", "す", "せ", "そ",
-      "た", "ち", "つ", "て", "と"
-    ];
+    const firebaseConfig = {
+      apiKey: "AIzaSyCXusWehQkBv_MyQr1IJfijUABEOoVV8JY",
+      authDomain: "hudawake.firebaseapp.com",
+      projectId: "hudawake",
+      storageBucket: "hudawake.firebasestorage.app",
+      messagingSenderId: "930699644302",
+      appId: "1:930699644302:web:84ea06ac9cd633a998e8df",
+      measurementId: "G-M3EWTW93F5"
+    };
 
-    const alphabet = [
-      "A", "B", "C", "D", "E",
-      "F", "G", "H", "I", "J",
-      "K", "L", "M", "N", "O",
-      "P", "Q", "R", "S", "T"
-    ];
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
 
-    const numbers = [
-      1, 2, 3, 4, 5,
-      6, 7, 8, 9, 10,
-      11, 12, 13, 14, 15,
-      16, 17, 18, 19, 20
-    ];
+    const cards = [{"札名": "む", "札番号": 87, "数字": 1, "ひらがな": "て", "アルファベット": "Q"}, {"札名": "す", "札番号": 18, "数字": 2, "ひらがな": "い", "アルファベット": "H"}, {"札名": "め", "札番号": 57, "数字": 3, "ひらがな": "た", "アルファベット": "G"}, {"札名": "ふ", "札番号": 22, "数字": 4, "ひらがな": "う", "アルファベット": "L"}, {"札名": "さ", "札番号": 70, "数字": 5, "ひらがな": "く", "アルファベット": "J"}, {"札名": "ほ", "札番号": 81, "数字": 6, "ひらがな": "て", "アルファベット": "K"}, {"札名": "せ", "札番号": 77, "数字": 7, "ひらがな": "つ", "アルファベット": "G"}, {"札名": "うか", "札番号": 74, "数字": 8, "ひらがな": "く", "アルファベット": "D"}, {"札名": "うら", "札番号": 65, "数字": 8, "ひらがな": "ち", "アルファベット": "O"}, {"札名": "つき", "札番号": 23, "数字": 1, "ひらがな": "す", "アルファベット": "M"}, {"札名": "つく", "札番号": 13, "数字": 1, "ひらがな": "し", "アルファベット": "C"}, {"札名": "しの", "札番号": 40, "数字": 2, "ひらがな": "お", "アルファベット": "T"}, {"札名": "しら", "札番号": 37, "数字": 2, "ひらがな": "せ", "アルファベット": "G"}, {"札名": "もろ", "札番号": 66, "数字": 3, "ひらがな": "き", "アルファベット": "P"}, {"札名": "もも", "札番号": 100, "数字": 3, "ひらがな": "あ", "アルファベット": "T"}, {"札名": "ゆう", "札番号": 71, "数字": 4, "ひらがな": "つ", "アルファベット": "A"}, {"札名": "ゆら", "札番号": 46, "数字": 4, "ひらがな": "お", "アルファベット": "P"}, {"札名": "いに", "札番号": 61, "数字": 11, "ひらがな": "ち", "アルファベット": "K"}, {"札名": "いまこ", "札番号": 21, "数字": 9, "ひらがな": "す", "アルファベット": "K"}, {"札名": "いまは", "札番号": 63, "数字": 10, "ひらがな": "ち", "アルファベット": "M"}, {"札名": "ちは", "札番号": 17, "数字": 5, "ひらがな": "し", "アルファベット": "G"}, {"札名": "ちぎりお", "札番号": 75, "数字": 7, "ひらがな": "つ", "アルファベット": "E"}, {"札名": "ちぎりき", "札番号": 42, "数字": 6, "ひらがな": "お", "アルファベット": "L"}, {"札名": "ひさ", "札番号": 33, "数字": 14, "ひらがな": "せ", "アルファベット": "C"}, {"札名": "ひとは", "札番号": 35, "数字": 12, "ひらがな": "せ", "アルファベット": "E"}, {"札名": "ひとも", "札番号": 99, "数字": 13, "ひらがな": "と", "アルファベット": "I"}, {"札名": "きり", "札番号": 91, "数字": 2, "ひらがな": "と", "アルファベット": "A"}, {"札名": "きみがためお", "札番号": 50, "数字": 8, "ひらがな": "か", "アルファベット": "J"}, {"札名": "きみがためは", "札番号": 15, "数字": 1, "ひらがな": "し", "アルファベット": "E"}, {"札名": "はなさ", "札番号": 96, "数字": 5, "ひらがな": "こ", "アルファベット": "F"}, {"札名": "はなの", "札番号": 9, "数字": 6, "ひらがな": "さ", "アルファベット": "S"}, {"札名": "はるす", "札番号": 2, "数字": 4, "ひらがな": "あ", "アルファベット": "L"}, {"札名": "はるの", "札番号": 67, "数字": 3, "ひらがな": "ち", "アルファベット": "Q"}, {"札名": "やえ", "札番号": 47, "数字": 17, "ひらがな": "そ", "アルファベット": "Q"}, {"札名": "やす", "札番号": 59, "数字": 16, "ひらがな": "た", "アルファベット": "I"}, {"札名": "やまが", "札番号": 32, "数字": 18, "ひらがな": "え", "アルファベット": "B"}, {"札名": "やまざ", "札番号": 28, "数字": 15, "ひらがな": "う", "アルファベット": "R"}, {"札名": "よも", "札番号": 85, "数字": 7, "ひらがな": "て", "アルファベット": "O"}, {"札名": "よを", "札番号": 62, "数字": 5, "ひらがな": "き", "アルファベット": "L"}, {"札名": "よのなかは", "札番号": 93, "数字": 8, "ひらがな": "と", "アルファベット": "C"}, {"札名": "よのなかよ", "札番号": 83, "数字": 6, "ひらがな": "て", "アルファベット": "M"}, {"札名": "かく", "札番号": 51, "数字": 20, "ひらがな": "た", "アルファベット": "A"}, {"札名": "かさ", "札番号": 6, "数字": 19, "ひらがな": "あ", "アルファベット": "P"}, {"札名": "かぜを", "札番号": 48, "数字": 10, "ひらがな": "お", "アルファベット": "R"}, {"札名": "かぜそ", "札番号": 98, "数字": 9, "ひらがな": "こ", "アルファベット": "H"}, {"札名": "みせ", "札番号": 90, "数字": 14, "ひらがな": "こ", "アルファベット": "J"}, {"札名": "みち", "札番号": 14, "数字": 13, "ひらがな": "い", "アルファベット": "D"}, {"札名": "みよ", "札番号": 94, "数字": 15, "ひらがな": "こ", "アルファベット": "D"}, {"札名": "みかき", "札番号": 49, "数字": 12, "ひらがな": "そ", "アルファベット": "S"}, {"札名": "みかの", "札番号": 27, "数字": 11, "ひらがな": "す", "アルファベット": "Q"}, {"札名": "たか", "札番号": 73, "数字": 4, "ひらがな": "つ", "アルファベット": "C"}, {"札名": "たき", "札番号": 55, "数字": 1, "ひらがな": "た", "アルファベット": "E"}, {"札名": "たご", "札番号": 4, "数字": 5, "ひらがな": "あ", "アルファベット": "N"}, {"札名": "たち", "札番号": 16, "数字": 2, "ひらがな": "い", "アルファベット": "F"}, {"札名": "たま", "札番号": 89, "数字": 3, "ひらがな": "て", "アルファベット": "S"}, {"札名": "たれ", "札番号": 34, "数字": 6, "ひらがな": "え", "アルファベット": "D"}, {"札名": "こい", "札番号": 41, "数字": 9, "ひらがな": "そ", "アルファベット": "K"}, {"札名": "こぬ", "札番号": 97, "数字": 20, "ひらがな": "と", "アルファベット": "G"}, {"札名": "この", "札番号": 24, "数字": 18, "ひらがな": "う", "アルファベット": "N"}, {"札名": "これ", "札番号": 10, "数字": 19, "ひらがな": "い", "アルファベット": "J"}, {"札名": "こころあ", "札番号": 29, "数字": 16, "ひらがな": "す", "アルファベット": "S"}, {"札名": "こころに", "札番号": 68, "数字": 17, "ひらがな": "き", "アルファベット": "R"}, {"札名": "わび", "札番号": 20, "数字": 11, "ひらがな": "う", "アルファベット": "T"}, {"札名": "わすら", "札番号": 38, "数字": 9, "ひらがな": "え", "アルファベット": "H"}, {"札名": "わすれ", "札番号": 54, "数字": 10, "ひらがな": "か", "アルファベット": "D"}, {"札名": "わがい", "札番号": 8, "数字": 19, "ひらがな": "あ", "アルファベット": "R"}, {"札名": "わがそ", "札番号": 92, "数字": 20, "ひらがな": "こ", "アルファベット": "B"}, {"札名": "わたのはらこ", "札番号": 76, "数字": 18, "ひらがな": "く", "アルファベット": "F"}, {"札名": "わたのはらや", "札番号": 11, "数字": 17, "ひらがな": "し", "アルファベット": "A"}, {"札名": "おく", "札番号": 5, "数字": 16, "ひらがな": "さ", "アルファベット": "O"}, {"札名": "おぐ", "札番号": 26, "数字": 15, "ひらがな": "う", "アルファベット": "P"}, {"札名": "おと", "札番号": 72, "数字": 13, "ひらがな": "く", "アルファベット": "B"}, {"札名": "おも", "札番号": 82, "数字": 14, "ひらがな": "け", "アルファベット": "L"}, {"札名": "おおえ", "札番号": 60, "数字": 11, "ひらがな": "き", "アルファベット": "T"}, {"札名": "おおけ", "札番号": 95, "数字": 10, "ひらがな": "と", "アルファベット": "E"}, {"札名": "おおこ", "札番号": 44, "数字": 12, "ひらがな": "お", "アルファベット": "N"}, {"札名": "なつ", "札番号": 36, "数字": 19, "ひらがな": "え", "アルファベット": "F"}, {"札名": "ながか", "札番号": 80, "数字": 18, "ひらがな": "け", "アルファベット": "T"}, {"札名": "ながら", "札番号": 84, "数字": 17, "ひらがな": "け", "アルファベット": "N"}, {"札名": "なげき", "札番号": 53, "数字": 15, "ひらがな": "た", "アルファベット": "C"}, {"札名": "なげけ", "札番号": 86, "数字": 16, "ひらがな": "け", "アルファベット": "P"}, {"札名": "なにし", "札番号": 25, "数字": 14, "ひらがな": "す", "アルファベット": "O"}, {"札名": "なにわえ", "札番号": 88, "数字": 13, "ひらがな": "け", "アルファベット": "R"}, {"札名": "なにわが", "札番号": 19, "数字": 12, "ひらがな": "し", "アルファベット": "I"}, {"札名": "あい", "札番号": 43, "数字": 18, "ひらがな": "そ", "アルファベット": "M"}, {"札名": "あけ", "札番号": 52, "数字": 20, "ひらがな": "か", "アルファベット": "B"}, {"札名": "あし", "札番号": 3, "数字": 19, "ひらがな": "さ", "アルファベット": "M"}, {"札名": "あきか", "札番号": 79, "数字": 9, "ひらがな": "つ", "アルファベット": "I"}, {"札名": "あきの", "札番号": 1, "数字": 20, "ひらがな": "さ", "アルファベット": "K"}, {"札名": "あまつ", "札番号": 12, "数字": 10, "ひらがな": "い", "アルファベット": "B"}, {"札名": "あまの", "札番号": 7, "数字": 11, "ひらがな": "さ", "アルファベット": "Q"}, {"札名": "あらし", "札番号": 69, "数字": 13, "ひらがな": "ち", "アルファベット": "S"}, {"札名": "あらざ", "札番号": 56, "数字": 12, "ひらがな": "か", "アルファベット": "F"}, {"札名": "ありあ", "札番号": 30, "数字": 14, "ひらがな": "え", "アルファベット": "J"}, {"札名": "ありま", "札番号": 58, "数字": 15, "ひらがな": "か", "アルファベット": "H"}, {"札名": "あわじ", "札番号": 78, "数字": 16, "ひらがな": "く", "アルファベット": "H"}, {"札名": "あわれ", "札番号": 45, "数字": 17, "ひらがな": "そ", "アルファベット": "O"}, {"札名": "あさじ", "札番号": 39, "数字": 7, "ひらがな": "せ", "アルファベット": "I"}, {"札名": "あさぼらけあ", "札番号": 31, "数字": 8, "ひらがな": "せ", "アルファベット": "A"}, {"札名": "あさぼらけう", "札番号": 64, "数字": 7, "ひらがな": "き", "アルファベット": "N"}];
+    const hiragana = ["あ","い","う","え","お","か","き","く","け","こ","さ","し","す","せ","そ","た","ち","つ","て","と"];
+    const alphabet = "ABCDEFGHIJKLMNOPQRST".split("");
+    const numbers = Array.from({length:20}, (_,i)=>i+1);
+    const digits = [0,1,2,3,4,5,6,7,8,9];
+    const modeNames = {number:"数字", alphabet:"アルファベット", hiragana:"ひらがな", cardNumber:"札番号"};
 
-    const digits = [
-      0, 1, 2, 3, 4, 5, 6, 7, 8, 9
-    ];
+    let currentDateKey = getJapanDateKey();
+    let currentResult = null;
+    let busy = false;
+
+    function getJapanDateKey() {
+      const parts = new Intl.DateTimeFormat("en-CA", {
+        timeZone:"Asia/Tokyo", year:"numeric", month:"2-digit", day:"2-digit"
+      }).formatToParts(new Date());
+      const p = Object.fromEntries(parts.map(x=>[x.type,x.value]));
+      return `${p.year}-${p.month}-${p.day}`;
+    }
 
     function displayToday() {
-      const today = new Date();
-
-      const week = [
-        "日", "月", "火", "水", "木", "金", "土"
-      ];
-
-      const year = today.getFullYear();
-      const month = today.getMonth() + 1;
-      const day = today.getDate();
-      const weekday = week[today.getDay()];
-
-      document.getElementById("today").textContent =
-        `${year}/${month}/${day} (${weekday})`;
+      const now = new Date();
+      const parts = new Intl.DateTimeFormat("ja-JP", {
+        timeZone:"Asia/Tokyo", year:"numeric", month:"numeric", day:"numeric", weekday:"short"
+      }).formatToParts(now);
+      const p = Object.fromEntries(parts.map(x=>[x.type,x.value]));
+      document.getElementById("today").textContent = `${p.year}/${p.month}/${p.day} (${p.weekday})`;
     }
 
     function shuffle(array) {
       const copy = [...array];
-
-      for (let i = copy.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [copy[i], copy[j]] = [copy[j], copy[i]];
+      for (let i=copy.length-1;i>0;i--) {
+        const j=Math.floor(Math.random()*(i+1));
+        [copy[i],copy[j]]=[copy[j],copy[i]];
       }
-
       return copy;
     }
 
-    /*
-     * 数字：1～20から10組を選ぶ
-     * 2桁の数字は7組以下
-     */
     function generateNumberSelection() {
       while (true) {
-        const selected = shuffle(numbers).slice(0, 10);
-
-        const twoDigitCount =
-          selected.filter(n => n >= 10).length;
-
-        if (twoDigitCount <= 7) {
-          return selected.sort((a, b) => a - b);
-        }
+        const selected=shuffle(numbers).slice(0,10);
+        if (selected.filter(n=>n>=10).length<=7) return selected.sort((a,b)=>a-b);
       }
     }
 
-    /*
-     * 数字・アルファベット・ひらがな用
-     * 前の試合と3組一致、7組不一致にする
-     */
-    function generateSelectionWithOverlap(
-      source,
-      previousSelection
-    ) {
-      const used = source.filter(
-        x => previousSelection.includes(x)
-      );
-
-      const unused = source.filter(
-        x => !previousSelection.includes(x)
-      );
-
-      const selectedUsed = shuffle(used).slice(0, 3);
-      const selectedUnused = shuffle(unused).slice(0, 7);
-
-      return [
-        ...selectedUsed,
-        ...selectedUnused
-      ];
+    function generateSelectionWithOverlap(source, previousSelection) {
+      const used=source.filter(x=>previousSelection.includes(x));
+      const unused=source.filter(x=>!previousSelection.includes(x));
+      return [...shuffle(used).slice(0,3), ...shuffle(unused).slice(0,7)];
     }
 
-    /*
-     * 2つの札分けで共通している組の数を数える
-     */
-    function countOverlap(selectionA, selectionB) {
-      return selectionA.filter(
-        x => selectionB.includes(x)
-      ).length;
+    function countOverlap(a,b) {
+      return a.filter(x=>b.includes(x)).length;
     }
 
-    /*
-     * 前の試合との一致数が0、8、9、10なら不採用
-     */
     function isValidSelection(selected, previousSelection) {
-      if (previousSelection === null) {
-        return true;
-      }
-
-      const overlap = countOverlap(
-        selected,
-        previousSelection
-      );
-
-      return ![0, 8, 9, 10].includes(overlap);
+      if (previousSelection===null) return true;
+      return ![0,8,9,10].includes(countOverlap(selected,previousSelection));
     }
 
-    /*
-     * 札番号の位を決める
-     * 4試合の場合、1の位と10の位を2試合ずつにする
-     * 試合順はランダム
-     */
     function generateGroupTypes(matchCount) {
-      const groupTypes = shuffle([
-        "ones",
-        "ones",
-        "tens",
-        "tens"
-      ]);
-
-      return groupTypes.slice(0, matchCount);
+      return shuffle(["ones","ones","tens","tens"]).slice(0,matchCount);
     }
 
-    /*
-     * 札番号の選出
-     *
-     * 同じ位を過去に選出している場合：
-     * その位の前回の組から1組、
-     * その位の前回に使っていない組から4組選ぶ。
-     *
-     * まだその位を選出していない場合：
-     * 10組から5組をランダムに選ぶ。
-     *
-     * もう一方の位の選出結果は参照しない。
-     */
-    function generateCardNumberSelection(
-      previousSelectionForThisGroup
-    ) {
-      /*
-       * この位を初めて使う場合
-       */
-      if (previousSelectionForThisGroup === null) {
-        return shuffle(digits)
-          .slice(0, 5)
-          .sort((a, b) => a - b);
-      }
-
-      /*
-       * この位の前回の選出結果を使う
-       */
-      const used = digits.filter(
-        d => previousSelectionForThisGroup.includes(d)
-      );
-
-      const unused = digits.filter(
-        d => !previousSelectionForThisGroup.includes(d)
-      );
-
-      /*
-       * 前回の組から1組、未使用の組から4組
-       */
-      const selectedUsed = shuffle(used).slice(0, 1);
-      const selectedUnused = shuffle(unused).slice(0, 4);
-
-      return [
-        ...selectedUsed,
-        ...selectedUnused
-      ].sort((a, b) => a - b);
+    function generateCardNumberSelection(previousSelectionForThisGroup) {
+      if (previousSelectionForThisGroup===null) return shuffle(digits).slice(0,5).sort((a,b)=>a-b);
+      const used=digits.filter(d=>previousSelectionForThisGroup.includes(d));
+      const unused=digits.filter(d=>!previousSelectionForThisGroup.includes(d));
+      return [...shuffle(used).slice(0,1), ...shuffle(unused).slice(0,4)].sort((a,b)=>a-b);
     }
 
-    /*
-     * 札番号は位と選出された5組だけを表示する
-     */
-    function createCardNumberContent(groupType, selected) {
-      const groupLabel =
-        groupType === "ones" ? "1の位" : "10の位";
+    function buildNewResult(type, matchCount) {
+      const matches=[];
+      let previousSelection=null;
+      const previousCardSelections={ones:null,tens:null};
+      const groupTypes=type==="cardNumber" ? generateGroupTypes(matchCount) : [];
 
-      return `
-        <div class="match-content">
-          <div>
-            ${groupLabel}：${selected.join(" ")}
-          </div>
-        </div>
-      `;
-    }
-
-    function generate(type) {
-      const matchCount = parseInt(
-        document.getElementById("matchCount").value,
-        10
-      );
-
-      let html = "";
-      let previousSelection = null;
-
-      /*
-       * 札番号専用：
-       * 1の位と10の位の前回結果を別々に保存する
-       */
-      const previousCardSelections = {
-        ones: null,
-        tens: null
-      };
-
-      /*
-       * 札番号の場合、各試合の位を先に決める
-       */
-      const groupTypes =
-        type === "cardNumber"
-          ? generateGroupTypes(matchCount)
-          : [];
-
-      for (let match = 1; match <= matchCount; match++) {
-        let selected = [];
-        let groupType = null;
-
-        /*
-         * 札番号以外の3種類
-         */
-        if (type !== "cardNumber") {
-          if (match === 1) {
-            if (type === "number") {
-              selected = generateNumberSelection();
-            }
-
-            if (type === "alphabet") {
-              selected = shuffle(alphabet)
-                .slice(0, 10)
-                .sort();
-            }
-
-            if (type === "hiragana") {
-              selected = shuffle(hiragana)
-                .slice(0, 10)
-                .sort(
-                  (a, b) =>
-                    hiragana.indexOf(a) -
-                    hiragana.indexOf(b)
-                );
-            }
+      for (let match=1;match<=matchCount;match++) {
+        let selected=[];
+        let groupType=null;
+        if (type!=="cardNumber") {
+          if (match===1) {
+            if (type==="number") selected=generateNumberSelection();
+            if (type==="alphabet") selected=shuffle(alphabet).slice(0,10).sort();
+            if (type==="hiragana") selected=shuffle(hiragana).slice(0,10).sort((a,b)=>hiragana.indexOf(a)-hiragana.indexOf(b));
           } else {
             while (true) {
-              if (type === "number") {
-                selected = generateSelectionWithOverlap(
-                  numbers,
-                  previousSelection
-                );
-
-                const twoDigitCount =
-                  selected.filter(n => n >= 10).length;
-
-                if (twoDigitCount > 7) {
-                  continue;
-                }
+              if (type==="number") {
+                selected=generateSelectionWithOverlap(numbers,previousSelection);
+                if (selected.filter(n=>n>=10).length>7) continue;
               }
-
-              if (type === "alphabet") {
-                selected = generateSelectionWithOverlap(
-                  alphabet,
-                  previousSelection
-                );
-              }
-
-              if (type === "hiragana") {
-                selected = generateSelectionWithOverlap(
-                  hiragana,
-                  previousSelection
-                );
-              }
-
-              if (
-                isValidSelection(
-                  selected,
-                  previousSelection
-                )
-              ) {
-                break;
-              }
+              if (type==="alphabet") selected=generateSelectionWithOverlap(alphabet,previousSelection);
+              if (type==="hiragana") selected=generateSelectionWithOverlap(hiragana,previousSelection);
+              if (isValidSelection(selected,previousSelection)) break;
             }
-
-            if (type === "number") {
-              selected.sort((a, b) => a - b);
-            }
-
-            if (type === "alphabet") {
-              selected.sort();
-            }
-
-            if (type === "hiragana") {
-              selected.sort(
-                (a, b) =>
-                  hiragana.indexOf(a) -
-                  hiragana.indexOf(b)
-              );
-            }
+            if (type==="number") selected.sort((a,b)=>a-b);
+            if (type==="alphabet") selected.sort();
+            if (type==="hiragana") selected.sort((a,b)=>hiragana.indexOf(a)-hiragana.indexOf(b));
           }
-
-          html += `
-            <div class="match">
-              <div class="match-title">
-                ${match}試合目
-              </div>
-              <div class="match-content">
-                ${selected.join(" ")}
-              </div>
-            </div>
-          `;
+        } else {
+          groupType=groupTypes[match-1];
+          selected=generateCardNumberSelection(previousCardSelections[groupType]);
+          previousCardSelections[groupType]=[...selected];
         }
-
-        /*
-         * 札番号
-         */
-        else {
-          groupType = groupTypes[match - 1];
-
-          /*
-           * 今回の位に対応する前回結果だけを取得
-           */
-          const previousSelectionForThisGroup =
-            previousCardSelections[groupType];
-
-          /*
-           * 同じ位の前回結果に基づいて選出
-           */
-          selected = generateCardNumberSelection(
-            previousSelectionForThisGroup
-          );
-
-          html += `
-            <div class="match">
-              <div class="match-title">
-                ${match}試合目
-              </div>
-              ${createCardNumberContent(
-                groupType,
-                selected
-              )}
-            </div>
-          `;
-
-          /*
-           * 今回の結果を、その位の記憶として更新
-           * もう一方の位の記憶は変更しない
-           */
-          previousCardSelections[groupType] = [
-            ...selected
-          ];
-        }
-
-        /*
-         * 数字・アルファベット・ひらがな用の
-         * 前回結果を保存
-         */
-        previousSelection = [...selected];
+        matches.push({match, selected, groupType});
+        previousSelection=[...selected];
       }
+      return {date:currentDateKey, type, matchCount, matches, updatedAt: new Date().toISOString()};
+    }
 
-      document.getElementById("result").innerHTML = html;
+    function escapeHtml(value) {
+      return String(value).replace(/[&<>"']/g, ch => ({
+        "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;"
+      }[ch]));
+    }
+
+    function matchSummary(match, result) {
+      if (result.type==="cardNumber") {
+        return `${match.groupType==="ones"?"1の位":"10の位"}：${match.selected.join("・")}`;
+      }
+      return match.selected.join("　");
+    }
+
+    function renderResult(result) {
+      currentResult=result;
+      const resultEl=document.getElementById("result");
+      if (!result) {
+        resultEl.innerHTML='<div class="empty-state">札分けの種類を選んでください。</div>';
+        document.getElementById("status").textContent="本日の札分けはまだ生成されていません。";
+        return;
+      }
+      const modeName=modeNames[result.type] || "札分け";
+      document.getElementById("status").textContent=`本日の共有札分け：${modeName}（${result.matchCount}試合）`;
+      resultEl.innerHTML=result.matches.map(m=>`
+        <div class="match">
+          <div class="match-title">${m.match}試合目</div>
+          <div class="match-content">${escapeHtml(matchSummary(m,result))}</div>
+          <div class="match-actions"><button class="cards-button" onclick="openCards(${m.match})">札一覧</button></div>
+        </div>`).join("");
+    }
+
+    function cardsForMatch(match, result) {
+      if (result.type==="cardNumber") {
+        const groupType=match.groupType;
+        // cards配列はExcelに記載された決まり字順なので、並べ替えず元の順序を維持する。
+        return cards.filter(card => {
+          if (groupType==="ones") return match.selected.includes(card["札番号"] % 10);
+          const tensDigit=card["札番号"]===100 ? 0 : Math.floor(card["札番号"]/10);
+          return match.selected.includes(tensDigit);
+        });
+      }
+      const column={number:"数字", alphabet:"アルファベット", hiragana:"ひらがな"}[result.type];
+      // Excelの行順（決まり字順）を維持し、選ばれた分類に該当する札だけを抽出する。
+      return cards.filter(card=>match.selected.includes(card[column]));
+    }
+
+    window.openCards = function(matchNumber) {
+      if (!currentResult) return;
+      const match=currentResult.matches.find(m=>m.match===matchNumber);
+      if (!match) return;
+      const list=cardsForMatch(match,currentResult);
+      document.getElementById("panelTitle").textContent=`${matchNumber}試合目の札一覧`;
+      document.getElementById("cardsPanelContent").innerHTML=`
+        <div class="card-name-list">${list.map(c=>`<span class="card-name">${escapeHtml(c["札名"])}</span>`).join("")}</div>`;
+      document.getElementById("cardsOverlay").classList.add("open");
+    };
+    window.closeCards = function(){document.getElementById("cardsOverlay").classList.remove("open");};
+    window.closeCardsIfBackdrop = function(event){if(event.target.id==="cardsOverlay") window.closeCards();};
+
+    function setBusy(value) {
+      busy=value;
+      document.querySelectorAll(".button-area button, #matchCount").forEach(el=>el.disabled=value);
+    }
+
+    async function loadTodayResult() {
+      currentDateKey=getJapanDateKey();
+      displayToday();
+      document.getElementById("status").textContent="本日の共有札分けを確認しています…";
+      try {
+        const ref=doc(db,"dailySplits",currentDateKey);
+        const snap=await getDoc(ref);
+        if (getJapanDateKey()!==currentDateKey) return handleDateChange();
+        if (snap.exists()) renderResult(snap.data());
+        else renderResult(null);
+      } catch(error) {
+        console.error(error);
+        document.getElementById("status").textContent="共有結果を取得できませんでした。ネット接続とFirebase設定を確認してください。";
+        renderResult(null);
+      }
+    }
+
+    async function generate(type) {
+      if (busy) return;
+      setBusy(true);
+      try {
+        const dateKey=getJapanDateKey();
+        if (dateKey!==currentDateKey) {
+          currentDateKey=dateKey;
+          await loadTodayResult();
+        }
+        const ref=doc(db,"dailySplits",currentDateKey);
+        const initialSnap=await getDoc(ref);
+        let forceReplace=false;
+
+        if (initialSnap.exists()) {
+          const existing=initialSnap.data();
+          const message=`本日の札分けは生成済みです（${modeNames[existing.type] || "札分け"}・${existing.matchCount}試合）。\n再生成すると全員に表示される札分けが変更されます。\n再生成しますか？`;
+          if (!window.confirm(message)) return;
+          forceReplace=true;
+        }
+
+        const candidate=buildNewResult(type,parseInt(document.getElementById("matchCount").value,10));
+        const outcome=await runTransaction(db,async transaction=>{
+          const snap=await transaction.get(ref);
+          if (!snap.exists()) {
+            transaction.set(ref,{...candidate, createdAt:serverTimestamp(), updatedAt:serverTimestamp()});
+            return {result:candidate, created:true};
+          }
+          if (!forceReplace) {
+            return {result:snap.data(), created:false};
+          }
+          transaction.set(ref,{...candidate, createdAt:snap.data().createdAt || serverTimestamp(), updatedAt:serverTimestamp()});
+          return {result:candidate, created:true};
+        });
+
+        if (outcome.created) {
+          renderResult(outcome.result);
+          document.getElementById("status").textContent="";
+        } else {
+          renderResult(outcome.result);
+          alert("ほかの人が先に本日の札分けを生成しました。共有されている結果を表示します。");
+        }
+      } catch(error) {
+        console.error(error);
+        alert("札分けの共有に失敗しました。\nFirebaseの設定とFirestoreのルールを確認してください。\n詳細："+(error?.message || error));
+      } finally {
+        setBusy(false);
+      }
+    }
+    window.generate=generate;
+
+    async function handleDateChange() {
+      const newKey=getJapanDateKey();
+      if (newKey===currentDateKey) return;
+      currentDateKey=newKey;
+      renderResult(null);
+      await loadTodayResult();
     }
 
     displayToday();
+    loadTodayResult();
+    setInterval(handleDateChange,15000);
   </script>
-
 </body>
-
 </html>
