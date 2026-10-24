@@ -26,8 +26,8 @@
     .empty-state { text-align:center; padding:28px 8px; color:#777; font-size:15px; }
     .match { display:flex; align-items:center; gap:6px; border-bottom:1px solid #ddd; padding:12px 0; }
     .match:last-child { border-bottom:none; }
-    .match-title { width:70px; flex-shrink:0; text-align:center; white-space:nowrap; border:0; background:transparent; color:#007aff; font-family:inherit; font-size:14px; font-weight:bold; text-decoration:underline; text-underline-offset:3px; padding:6px 0; cursor:pointer; }
-    .match-content { font-size:15px; text-align:left; line-height:1.5; white-space:normal; overflow-wrap:anywhere; flex:1 1 0; min-width:0; }
+    .match-title { width:62px; flex-shrink:0; text-align:center; white-space:nowrap; border:0; background:transparent; color:#007aff; font-family:inherit; font-size:14px; font-weight:bold; text-decoration:underline; text-underline-offset:3px; padding:6px 0; cursor:pointer; }
+    .match-content { font-size:clamp(9px, 3.2vw, 15px); text-align:left; line-height:1.5; white-space:nowrap; overflow-wrap:normal; flex:1 1 0; min-width:0; }
     .match-actions { flex-shrink:0; width:27px; }
     .cards-button { width:27px; height:27px; display:flex; align-items:center; justify-content:center; border:0; color:#007aff; background:transparent; border-radius:0; padding:0; line-height:1; cursor:pointer; flex-shrink:0; }
     .cards-button svg { display:block; width:21px; height:21px; }
@@ -45,8 +45,8 @@
       .button-area { gap:4px; }
       .button-area button { font-size:13px; padding:10px 1px; }
       .match { gap:4px; }
-      .match-title { width:70px; font-size:14px; }
-      .match-content { font-size:14px; }
+      .match-title { width:62px; font-size:13px; }
+      .match-content { font-size:clamp(9px, 3.2vw, 12px); }
     }
   </style>
 </head>
@@ -69,7 +69,7 @@
   <div id="today"></div>
   <div id="status" role="status"></div>
   <div id="result"><div class="empty-state">札分けの種類を選んでください。</div></div>
-  <div id="version">Ver. 2.0.4</div>
+  <div id="version">Ver. 2.0.5</div>
 
   <div id="cardsOverlay" class="overlay" onclick="closeCardsIfBackdrop(event)">
     <section class="side-panel" role="dialog" aria-modal="true" aria-labelledby="panelTitle">
@@ -219,7 +219,7 @@
       if (result.type==="cardNumber") {
         return `${match.groupType==="ones"?"1の位":"10の位"}：${match.selected.join("・")}`;
       }
-      return match.selected.join("　");
+      return match.selected.join(" ");
     }
 
     function renderResult(result) {
