@@ -1,0 +1,531 @@
+```html
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>競技かるた札分け</title>
+
+  <!-- Google Analytics -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-G8S3X9K2LC"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+
+    function gtag() {
+      dataLayer.push(arguments);
+    }
+
+    gtag('js', new Date());
+    gtag('config', 'G-G8S3X9K2LC');
+  </script>
+
+  <style>
+    body {
+      margin: 0;
+      padding: 10px;
+      font-family: sans-serif;
+      background-color: #f5f5f5;
+      text-align: center;
+    }
+
+    h1 {
+      font-size: 24px;
+      margin-top: 12px;
+      margin-bottom: 12px;
+    }
+
+    .button-area {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 12px;
+    }
+
+    .button-area button {
+      flex: 1;
+      font-size: 15px;
+      padding: 10px 0;
+      border: none;
+      border-radius: 10px;
+      background-color: #007aff;
+      color: white;
+      white-space: nowrap;
+    }
+
+    #today {
+      font-size: 16px;
+      color: #555;
+      margin-bottom: 18px;
+    }
+
+    #matchCountArea {
+      margin-bottom: 18px;
+    }
+
+    #matchCount {
+      font-size: 15px;
+      padding: 6px 12px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      background-color: white;
+    }
+
+    #result {
+      background-color: white;
+      border-radius: 18px;
+      padding: 10px 12px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+    }
+
+    .match {
+      display: flex;
+      align-items: center;
+      border-bottom: 1px solid #ddd;
+      padding: 12px 0;
+    }
+
+    .match:last-child {
+      border-bottom: none;
+    }
+
+    .match-title {
+      width: 72px;
+      font-size: 16px;
+      font-weight: bold;
+      flex-shrink: 0;
+    }
+
+    .match-content {
+      font-size: 18px;
+      text-align: left;
+      line-height: 1.5;
+      word-break: break-word;
+    }
+
+    #version {
+      position: fixed;
+      right: 8px;
+      bottom: 6px;
+      font-size: 11px;
+      color: #aaa;
+    }
+  </style>
+</head>
+
+<body>
+
+  <h1>競技かるた札分け</h1>
+
+  <div class="button-area">
+    <button onclick="generate('number')">
+      数字
+    </button>
+
+    <button onclick="generate('alphabet')">
+      アルファベット
+    </button>
+
+    <button onclick="generate('hiragana')">
+      ひらがな
+    </button>
+
+    <button onclick="generate('cardNumber')">
+      札番号
+    </button>
+  </div>
+
+  <div id="matchCountArea">
+    <select id="matchCount">
+      <option value="1">1試合</option>
+      <option value="2">2試合</option>
+      <option value="3">3試合</option>
+      <option value="4" selected>4試合</option>
+    </select>
+  </div>
+
+  <div id="today"></div>
+
+  <div id="result"></div>
+
+  <div id="version">Ver. 1.1.1</div>
+
+  <script>
+    const hiragana = [
+      "あ", "い", "う", "え", "お",
+      "か", "き", "く", "け", "こ",
+      "さ", "し", "す", "せ", "そ",
+      "た", "ち", "つ", "て", "と"
+    ];
+
+    const alphabet = [
+      "A", "B", "C", "D", "E",
+      "F", "G", "H", "I", "J",
+      "K", "L", "M", "N", "O",
+      "P", "Q", "R", "S", "T"
+    ];
+
+    const numbers = [
+      1, 2, 3, 4, 5,
+      6, 7, 8, 9, 10,
+      11, 12, 13, 14, 15,
+      16, 17, 18, 19, 20
+    ];
+
+    const digits = [
+      0, 1, 2, 3, 4, 5, 6, 7, 8, 9
+    ];
+
+    function displayToday() {
+      const today = new Date();
+
+      const week = [
+        "日", "月", "火", "水", "木", "金", "土"
+      ];
+
+      const year = today.getFullYear();
+      const month = today.getMonth() + 1;
+      const day = today.getDate();
+      const weekday = week[today.getDay()];
+
+      document.getElementById("today").textContent =
+        `${year}/${month}/${day} (${weekday})`;
+    }
+
+    function shuffle(array) {
+      const copy = [...array];
+
+      for (let i = copy.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [copy[i], copy[j]] = [copy[j], copy[i]];
+      }
+
+      return copy;
+    }
+
+    /*
+     * 数字：1～20から10組を選ぶ
+     * 2桁の数字は7組以下
+     */
+    function generateNumberSelection() {
+      while (true) {
+        const selected = shuffle(numbers).slice(0, 10);
+
+        const twoDigitCount =
+          selected.filter(n => n >= 10).length;
+
+        if (twoDigitCount <= 7) {
+          return selected.sort((a, b) => a - b);
+        }
+      }
+    }
+
+    /*
+     * 数字・アルファベット・ひらがな用
+     * 前の試合と3組一致、7組不一致にする
+     */
+    function generateSelectionWithOverlap(
+      source,
+      previousSelection
+    ) {
+      const used = source.filter(
+        x => previousSelection.includes(x)
+      );
+
+      const unused = source.filter(
+        x => !previousSelection.includes(x)
+      );
+
+      const selectedUsed = shuffle(used).slice(0, 3);
+      const selectedUnused = shuffle(unused).slice(0, 7);
+
+      return [
+        ...selectedUsed,
+        ...selectedUnused
+      ];
+    }
+
+    /*
+     * 2つの札分けで共通している組の数を数える
+     */
+    function countOverlap(selectionA, selectionB) {
+      return selectionA.filter(
+        x => selectionB.includes(x)
+      ).length;
+    }
+
+    /*
+     * 前の試合との一致数が0、8、9、10なら不採用
+     */
+    function isValidSelection(selected, previousSelection) {
+      if (previousSelection === null) {
+        return true;
+      }
+
+      const overlap = countOverlap(
+        selected,
+        previousSelection
+      );
+
+      return ![0, 8, 9, 10].includes(overlap);
+    }
+
+    /*
+     * 札番号の位を決める
+     * 4試合の場合、1の位と10の位を2試合ずつにする
+     * 試合順はランダム
+     */
+    function generateGroupTypes(matchCount) {
+      const groupTypes = shuffle([
+        "ones",
+        "ones",
+        "tens",
+        "tens"
+      ]);
+
+      return groupTypes.slice(0, matchCount);
+    }
+
+    /*
+     * 札番号の選出
+     *
+     * 同じ位を過去に選出している場合：
+     * その位の前回の組から1組、
+     * その位の前回に使っていない組から4組選ぶ。
+     *
+     * まだその位を選出していない場合：
+     * 10組から5組をランダムに選ぶ。
+     *
+     * もう一方の位の選出結果は参照しない。
+     */
+    function generateCardNumberSelection(
+      previousSelectionForThisGroup
+    ) {
+      /*
+       * この位を初めて使う場合
+       */
+      if (previousSelectionForThisGroup === null) {
+        return shuffle(digits)
+          .slice(0, 5)
+          .sort((a, b) => a - b);
+      }
+
+      /*
+       * この位の前回の選出結果を使う
+       */
+      const used = digits.filter(
+        d => previousSelectionForThisGroup.includes(d)
+      );
+
+      const unused = digits.filter(
+        d => !previousSelectionForThisGroup.includes(d)
+      );
+
+      /*
+       * 前回の組から1組、未使用の組から4組
+       */
+      const selectedUsed = shuffle(used).slice(0, 1);
+      const selectedUnused = shuffle(unused).slice(0, 4);
+
+      return [
+        ...selectedUsed,
+        ...selectedUnused
+      ].sort((a, b) => a - b);
+    }
+
+    /*
+     * 札番号は位と選出された5組だけを表示する
+     */
+    function createCardNumberContent(groupType, selected) {
+      const groupLabel =
+        groupType === "ones" ? "1の位" : "10の位";
+
+      return `
+        <div class="match-content">
+          <div>
+            ${groupLabel}：${selected.join("・")}
+          </div>
+        </div>
+      `;
+    }
+
+    function generate(type) {
+      const matchCount = parseInt(
+        document.getElementById("matchCount").value,
+        10
+      );
+
+      let html = "";
+      let previousSelection = null;
+
+      /*
+       * 札番号専用：
+       * 1の位と10の位の前回結果を別々に保存する
+       */
+      const previousCardSelections = {
+        ones: null,
+        tens: null
+      };
+
+      /*
+       * 札番号の場合、各試合の位を先に決める
+       */
+      const groupTypes =
+        type === "cardNumber"
+          ? generateGroupTypes(matchCount)
+          : [];
+
+      for (let match = 1; match <= matchCount; match++) {
+        let selected = [];
+        let groupType = null;
+
+        /*
+         * 札番号以外の3種類
+         */
+        if (type !== "cardNumber") {
+          if (match === 1) {
+            if (type === "number") {
+              selected = generateNumberSelection();
+            }
+
+            if (type === "alphabet") {
+              selected = shuffle(alphabet)
+                .slice(0, 10)
+                .sort();
+            }
+
+            if (type === "hiragana") {
+              selected = shuffle(hiragana)
+                .slice(0, 10)
+                .sort(
+                  (a, b) =>
+                    hiragana.indexOf(a) -
+                    hiragana.indexOf(b)
+                );
+            }
+          } else {
+            while (true) {
+              if (type === "number") {
+                selected = generateSelectionWithOverlap(
+                  numbers,
+                  previousSelection
+                );
+
+                const twoDigitCount =
+                  selected.filter(n => n >= 10).length;
+
+                if (twoDigitCount > 7) {
+                  continue;
+                }
+              }
+
+              if (type === "alphabet") {
+                selected = generateSelectionWithOverlap(
+                  alphabet,
+                  previousSelection
+                );
+              }
+
+              if (type === "hiragana") {
+                selected = generateSelectionWithOverlap(
+                  hiragana,
+                  previousSelection
+                );
+              }
+
+              if (
+                isValidSelection(
+                  selected,
+                  previousSelection
+                )
+              ) {
+                break;
+              }
+            }
+
+            if (type === "number") {
+              selected.sort((a, b) => a - b);
+            }
+
+            if (type === "alphabet") {
+              selected.sort();
+            }
+
+            if (type === "hiragana") {
+              selected.sort(
+                (a, b) =>
+                  hiragana.indexOf(a) -
+                  hiragana.indexOf(b)
+              );
+            }
+          }
+
+          html += `
+            <div class="match">
+              <div class="match-title">
+                ${match}試合目
+              </div>
+              <div class="match-content">
+                ${selected.join(" ")}
+              </div>
+            </div>
+          `;
+        }
+
+        /*
+         * 札番号
+         */
+        else {
+          groupType = groupTypes[match - 1];
+
+          /*
+           * 今回の位に対応する前回結果だけを取得
+           */
+          const previousSelectionForThisGroup =
+            previousCardSelections[groupType];
+
+          /*
+           * 同じ位の前回結果に基づいて選出
+           */
+          selected = generateCardNumberSelection(
+            previousSelectionForThisGroup
+          );
+
+          html += `
+            <div class="match">
+              <div class="match-title">
+                ${match}試合目
+              </div>
+              ${createCardNumberContent(
+                groupType,
+                selected
+              )}
+            </div>
+          `;
+
+          /*
+           * 今回の結果を、その位の記憶として更新
+           * もう一方の位の記憶は変更しない
+           */
+          previousCardSelections[groupType] = [
+            ...selected
+          ];
+        }
+
+        /*
+         * 数字・アルファベット・ひらがな用の
+         * 前回結果を保存
+         */
+        previousSelection = [...selected];
+      }
+
+      document.getElementById("result").innerHTML = html;
+    }
+
+    displayToday();
+  </script>
+
+</body>
+
+</html>
+```
