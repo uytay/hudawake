@@ -170,7 +170,7 @@
       return [...shuffle(used).slice(0,1), ...shuffle(unused).slice(0,4)].sort((a,b)=>a-b);
     }
 
-    function buildNewResult(type, matchCount) {
+    function buildNewResult(type, matchCount, resultDateKey=currentDateKey) {
       const matches=[];
       let previousSelection=null;
       const previousCardSelections={ones:null,tens:null};
@@ -206,7 +206,7 @@
         matches.push({match, selected, groupType});
         previousSelection=[...selected];
       }
-      return {date:currentDateKey, type, matchCount, matches, updatedAt: new Date().toISOString()};
+      return {date:resultDateKey, type, matchCount, matches, updatedAt: new Date().toISOString()};
     }
 
     function escapeHtml(value) {
@@ -292,24 +292,44 @@
     async function generate(type) {
       if (busy) return;
       setBusy(true);
+      document.getElementById("status").textContent="札分けを生成・共有しています…";
       try {
+        // 生成処理の開始時点で日本時間の日付を固定し、途中で日付が変わっても
+        // 別の日付の結果を読み書きしないようにする。
         const dateKey=getJapanDateKey();
         if (dateKey!==currentDateKey) {
           currentDateKey=dateKey;
-          await loadTodayResult();
+          displayToday();
+          renderResult(null);
         }
-        const ref=doc(db,"dailySplits",currentDateKey);
-        const initialSnap=await getDoc(ref);
-        let forceReplace=false;
 
+        const ref=doc(db,"dailySplits",dateKey);
+        const initialSnap=await getDoc(ref);
+
+        // Firestoreへのアクセス中に日付が変わった場合は、その日の生成を中止して
+        // 新しい日付の状態を読み直す。
+        if (getJapanDateKey()!==dateKey) {
+          await handleDateChange();
+          return;
+        }
+
+        let forceReplace=false;
         if (initialSnap.exists()) {
           const existing=initialSnap.data();
           const message=`本日の札分けは生成済みです（${modeNames[existing.type] || "札分け"}・${existing.matchCount}試合）。\n再生成すると全員に表示される札分けが変更されます。\n再生成しますか？`;
-          if (!window.confirm(message)) return;
+          if (!window.confirm(message)) {
+            document.getElementById("status").textContent="";
+            return;
+          }
           forceReplace=true;
         }
 
-        const candidate=buildNewResult(type,parseInt(document.getElementById("matchCount").value,10));
+        const candidate=buildNewResult(
+          type,
+          parseInt(document.getElementById("matchCount").value,10),
+          dateKey
+        );
+
         const outcome=await runTransaction(db,async transaction=>{
           const snap=await transaction.get(ref);
           if (!snap.exists()) {
@@ -323,33 +343,38 @@
           return {result:candidate, created:true};
         });
 
-        if (outcome.created) {
-          renderResult(outcome.result);
-          document.getElementById("status").textContent="";
-        } else {
-          renderResult(outcome.result);
+        if (getJapanDateKey()!==dateKey) {
+          await handleDateChange();
+          return;
+        }
+
+        renderResult(outcome.result);
+        document.getElementById("status").textContent="";
+        if (!outcome.created) {
           alert("ほかの人が先に本日の札分けを生成しました。共有されている結果を表示します。");
         }
       } catch(error) {
-        console.error(error);
-        alert("札分けの共有に失敗しました。\nFirebaseの設定とFirestoreのルールを確認してください。\n詳細："+(error?.message || error));
+        console.error("札分けの生成・共有に失敗しました:",error);
+        document.getElementById("status").textContent="札分けを共有できませんでした。通信状態を確認して、もう一度お試しください。";
+        alert("札分けの共有に失敗しました。\n通信状態を確認して、もう一度お試しください。\n詳細："+(error?.message || error));
       } finally {
         setBusy(false);
       }
     }
-    window.generate=generate;
+        window.generate=generate;
 
     async function handleDateChange() {
       const newKey=getJapanDateKey();
       if (newKey===currentDateKey) return;
+      // 日付が変わったときは表示だけをリセットし、Firebaseへのアクセスは行わない。
       currentDateKey=newKey;
+      displayToday();
       renderResult(null);
-      await loadTodayResult();
+      document.getElementById("status").textContent="";
     }
 
     displayToday();
     loadTodayResult();
-    setInterval(handleDateChange,15000);
   </script>
 </body>
 </html>
